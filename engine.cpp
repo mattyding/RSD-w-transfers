@@ -15,8 +15,9 @@ int main() {
     cout << "Number of agents: " << numAgents << endl << endl;
 
     run_experiment_1(agents, 20, verbose);
-    run_experiment_2(agents, 30, verbose);
+    run_experiment_2(agents, 50, verbose);
     run_experiment_3(agents, 10, verbose);
+    run_experiment_4(agents, 20, verbose);
 }
 
 void run_experiment_1(AgentArray agents, int num_trials, bool verbose) {
@@ -122,6 +123,40 @@ void run_experiment_3(AgentArray agents, int num_trials, bool verbose) {
     outfile.open("output/experiment_3.csv");
     for (int i = 0; i < total_percentage_utility_gains.size(); i++) {
         outfile << pow(2, i) << "," << total_percentage_utility_gains[i] / num_trials << endl;
+    }
+    cout << "Average percentage utility gains written to file" << endl;
+    print_line();
+    cout << endl;
+}
+
+void run_experiment_4(AgentArray agents, int num_trials, bool verbose) {
+    print_line();
+    cout << "Experiment 4: Utility increases with wealth inequality" << endl;
+    print_line();
+    cout << "Running " << num_trials << " trials and averaging the results..." << endl;
+    vector<tuple<double, double>> total_utility_gain_by_initial_budget = vector<tuple<double, double>>();
+    for (int trial = 0; trial < num_trials; trial++) {
+        AgentArray trial_agents = agents.copy();
+        vector<int> budget_order = gen_ordering(agents.numAgents);
+        // assign agent budget according to power law
+        for (int i = 0; i < trial_agents.numAgents; i++) {
+            trial_agents.agents[i].budget = pow(1.01, budget_order[i]);
+        }
+        vector<int> order = gen_ordering(agents.numAgents);
+        Matching rsd_matching = run_random_serial_dictatorship(trial_agents.preferences, order);
+        AgentArray trial_agents_copy = trial_agents.copy();
+        Matching post_transfer_matching = run_transfers(trial_agents_copy, rsd_matching, order, 0, verbose);
+        for (int i = 0; i < trial_agents.numAgents; i++) {
+            int pre_swap_utility = agents.valuations[i][rsd_matching.getAssignmentForAgent(i)];
+            int post_swap_utility = agents.valuations[i][post_transfer_matching.getAssignmentForAgent(i)];
+                int percentage_utility_increase = post_swap_utility - pre_swap_utility + trial_agents_copy.agents[i].budget - trial_agents.agents[i].budget;
+                total_utility_gain_by_initial_budget.push_back(make_tuple(trial_agents.agents[i].budget, percentage_utility_increase));
+        }
+    }
+    ofstream outfile;
+    outfile.open("output/experiment_4.csv");
+    for (int i = 0; i < total_utility_gain_by_initial_budget.size(); i++) {
+        outfile << get<0>(total_utility_gain_by_initial_budget[i]) << "," << get<1>(total_utility_gain_by_initial_budget[i]) << endl;
     }
     cout << "Average percentage utility gains written to file" << endl;
     print_line();
