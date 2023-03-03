@@ -23,15 +23,11 @@ class Agent {
 
     public:
         int id;
-        // 50% chance 0; 50% chance in [0, 1000]
         int budget;
 
-
-        // valuations[k] is the valuation of room k (in dollars)
-        // valuations are multiple of 100 and in the range [0, 9900]
+        // valuations[k] is the valuation of room k
         std::vector<int> valuations;
-        // preferences[k] is the kth favorite room (ranked by valuation)
-        // ties are broken by the lower room number
+        // preferences[k] is the kth highest valued room (ties broken by lower room number)
         std::vector<int> preferences;
 
         Agent(int id, RoomArray rooms);
@@ -47,8 +43,13 @@ class AgentArray {
     public:
         int numAgents;
         std::vector<Agent> agents;
+        // preferences stored as 2d array. preferences[i][j] is the jth highest valued room for agent i
+        std::vector<std::vector<int>> preferences;
+        // valuations stored as 2d array. valuations[i][j] is the valuation of room j for agent i
+        std::vector<std::vector<int>> valuations;
 
         AgentArray(int numAgents, RoomArray rooms);
+        AgentArray copy();
 
         int computeTotalWelfare(Matching &m);
 

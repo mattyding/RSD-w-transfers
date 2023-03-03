@@ -17,9 +17,12 @@
 
 int main();
 
-Matching run_random_serial_dictatorship(AgentArray &agents, RoomArray &rooms, std::vector<int> &order, bool verbose);
-Matching run_transfers(AgentArray &agents, Matching &m, std::vector<int> &order, int friction, bool verbose);
+Matching run_random_serial_dictatorship(const std::vector<std::vector<int>> &preferences, const std::vector<int> &order);
+Matching run_transfers(AgentArray &agents, Matching &m, const std::vector<int> &order, int friction, bool verbose);
 std::vector<int> gen_ordering(int numAgents);
+
+void print_title();
+void print_line();
 
 #endif
 

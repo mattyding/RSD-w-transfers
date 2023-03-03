@@ -32,7 +32,7 @@ int Agent::getValuation(int room) {
 }
 
 int Agent::getPreferenceRank(int room) {
-    for (int i = 0; i < sizeof(preferences) + 1; i++) {
+    for (int i = 0; i < this->preferences.size(); i++) {
         if (preferences[i] == room) {
             return i;
         }
@@ -63,15 +63,23 @@ AgentArray::AgentArray(int numAgents, RoomArray rooms) {
     for (int i = 0; i < numAgents; i++) {
         this->agents.push_back(Agent(i, rooms));
     }
+    // preferences and valuations stored as 2d arrays
+    this->preferences = vector<vector<int>>(numAgents, vector<int>(rooms.numRooms));
+    this->valuations = vector<vector<int>>(numAgents, vector<int>(rooms.numRooms));
+    for (int i = 0; i < numAgents; i++) {
+        for (int j = 0; j < rooms.numRooms; j++) {
+            this->preferences[i][j] = agents[i].getPreferenceRank(j);
+            this->valuations[i][j] = agents[i].getValuation(j);
+        }
+    }
 };
 
 int AgentArray::computeTotalWelfare(Matching &m) {
     int total_welfare = 0;
-    for (int i = 0; i < agents.size(); i++) {
-        int room_num = m.getAssignmentForAgent(i);
-        if (room_num != -1) {
-            total_welfare += agents[i].getValuation(room_num);
-            // total_welfare -= agents[i].budget; // INCORPORATING BUDGET
+    for (int i = 0; i < numAgents; i++) {
+        int assign = m.getAssignmentForAgent(i);
+        if (assign != -1) {
+            total_welfare += this->valuations[i][assign];
         }
     }
     return total_welfare;
@@ -94,4 +102,12 @@ void AgentArray::printResults(Matching & m) {
         int assign = m.getAssignmentForAgent(i);
         cout << "person " << i << " got assignment " << assign << " which is their " << agents[i].getPreferenceRank(assign) + 1 << " choice" << endl;
         }
+}
+
+AgentArray AgentArray::copy() {
+    AgentArray copy = AgentArray(this->numAgents, RoomArray(0));
+    copy.agents = this->agents;
+    copy.preferences = this->preferences;
+    copy.valuations = this->valuations;
+    return copy;
 }
