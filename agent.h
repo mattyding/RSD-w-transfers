@@ -42,6 +42,7 @@ class Agent {
 class AgentArray {
     public:
         int numAgents;
+        int numRooms;
         std::vector<Agent> agents;
         // preferences stored as 2d array. preferences[i][j] is the jth highest valued room for agent i
         std::vector<std::vector<int>> preferences;

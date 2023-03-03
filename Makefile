@@ -13,3 +13,4 @@ all : agent.cpp agent.h rooms.cpp rooms.h engine.cpp engine.h
 clean:
 	rm -f *.o
 	rm -f engine
+	rm -f output/*

@@ -5,7 +5,6 @@ using namespace std;
 int main() {
     int numRooms = 1000;
     int numAgents = 1000;
-    int friction_factor = 1;
     bool verbose = false;
     int num_trials = 20;
 
@@ -16,34 +15,113 @@ int main() {
     cout << "Number of rooms: " << numRooms << endl;
     cout << "Number of agents: " << numAgents << endl << endl;
 
+    run_experiment_1(agents, num_trials, verbose);
+    run_experiment_2(agents, num_trials, verbose);
+    run_experiment_3(agents, verbose);
+}
+
+void run_experiment_1(AgentArray agents, int num_trials, bool verbose) {
     print_line();
-    cout << "Experiment 1: Utility with and without transfers" << endl;
+    cout << "Experiment 1: Utility increase from transfers" << endl;
     print_line();
     cout << "Running " << num_trials << " trials and averaging the results..." << endl;
     int total_utility_pre_swap = 0;
-    int total_utility_post_swap = 0;
-    int total_utility_post_swap_no_friction = 0;
+    vector<int> total_utility_increases_per_agent = vector<int>(agents.numAgents, 0);
     for (int trial = 0; trial < num_trials; trial++) {
-        vector<int> order = gen_ordering(numAgents);
+        vector<int> order = gen_ordering(agents.numAgents);
         // Random Serial Dictatorship
         Matching rsd_matching = run_random_serial_dictatorship(agents.preferences, order);
-        total_utility_pre_swap += agents.computeTotalWelfare(rsd_matching);
 
         // with transfers!
-        AgentArray agents_transfer_with_friction = agents.copy();
-        Matching post_transfer_matching = run_transfers(agents_transfer_with_friction, rsd_matching, order, friction_factor, verbose);
-        total_utility_post_swap += agents.computeTotalWelfare(post_transfer_matching);
-        AgentArray agents_no_friction = agents.copy();
-        Matching post_transfer_matching_no_friction = run_transfers(agents_no_friction, rsd_matching, order, 0, verbose);
-        total_utility_post_swap_no_friction += agents.computeTotalWelfare(post_transfer_matching_no_friction);
+        AgentArray agents_copy = agents.copy();
+        Matching post_transfer_matching = run_transfers(agents_copy, rsd_matching, order, 0, verbose);
+        for (int i = 0; i < agents.numAgents; i++) {
+            int pre_swap_utility = agents.valuations[i][rsd_matching.getAssignmentForAgent(i)];
+            int post_swap_utility = agents.valuations[i][post_transfer_matching.getAssignmentForAgent(i)];
+            total_utility_increases_per_agent[i] += post_swap_utility - pre_swap_utility + agents_copy.agents[i].budget - 10000; // 10k is the initial budget
+        }
     }
-    cout << "Average utility pre-swap: " << total_utility_pre_swap / num_trials << endl;
-    cout << "Average utility post-swap with friction: " << total_utility_post_swap / num_trials << endl;
-    cout << "Average utility post-swap no friction: " << total_utility_post_swap_no_friction / num_trials << endl;
+    for (int i = 0; i < agents.numAgents; i++) {
+        total_utility_increases_per_agent[i] /= num_trials;
+    }
+    ofstream outfile;
+    outfile.open("output/experiment_1.csv");
+    for (int i = 0; i < agents.numAgents; i++) {
+        outfile << total_utility_increases_per_agent[i] << endl;
+    }
+    cout << "Average utility increases per agent written to file" << endl;
     print_line();
-    cout << "Percentage utility gain from swaps with friction: " << (total_utility_post_swap - total_utility_pre_swap) * 100.0 / total_utility_pre_swap << "%" << endl;
-    cout << "Percentage utility gain from swaps no friction: " << (total_utility_post_swap_no_friction - total_utility_pre_swap) * 100.0 / total_utility_pre_swap << "%" << endl;
+    cout << endl;
+}
+
+void run_experiment_2(AgentArray agents, int num_trials, bool verbose) {
     print_line();
+    cout << "Experiment 2: RSD with Augmented Preferences" << endl;
+    print_line();
+    cout << "Running " << num_trials << " trials and averaging the results..." << endl;
+    int total_utility_unug_rsd = 0;
+    int total_utility_aug_rsd = 0;
+    for (int trial = 0; trial < num_trials; trial++) {
+        vector<int> order = gen_ordering(agents.numAgents);
+
+        Matching unaug_rsd_matching = run_random_serial_dictatorship(agents.preferences, order);
+        vector<int> public_valuations = vector<int>(agents.numRooms, 0);
+        for (int i = 0; i < agents.numRooms; i++) {
+            public_valuations[i] = agents.agents[unaug_rsd_matching.assignments[i]].valuations[i];
+        }
+        // augment preferences by taking max of private valuation and average of public+private valuations
+        vector<vector<int>> augmented_preferences = vector<vector<int>>(agents.numAgents, vector<int>(agents.numRooms, 0));
+        for (int i = 0; i < agents.numAgents; i++) {
+            vector<int> augmented_agent_valuations = vector<int>(agents.numRooms, 0);
+            for (int j = 0; j < agents.numRooms; j++) {
+                augmented_agent_valuations[j] = max(agents.agents[i].valuations[j], (agents.agents[i].valuations[j] + public_valuations[j]) / 2);
+            }
+            vector<int> augmented_agent_preferences = vector<int>(agents.numRooms, 0);
+            iota(augmented_agent_preferences.begin(), augmented_agent_preferences.end(), 0);
+            stable_sort(augmented_agent_preferences.begin(), augmented_agent_preferences.end(), [&augmented_agent_valuations](int i, int j) {return augmented_agent_valuations[i] > augmented_agent_valuations[j];});
+            augmented_preferences[i] = augmented_agent_preferences;
+        }
+        Matching aug_rsd_matching = run_random_serial_dictatorship(augmented_preferences, order);
+
+        unaug_rsd_matching = run_transfers(agents, unaug_rsd_matching, order, 0, verbose);
+        aug_rsd_matching = run_transfers(agents, aug_rsd_matching, order, 0, verbose);
+
+        total_utility_unug_rsd += agents.computeTotalWelfare(unaug_rsd_matching);
+        total_utility_aug_rsd += agents.computeTotalWelfare(aug_rsd_matching);
+    }
+    cout << "Average utility unaugmented RSD: " << total_utility_unug_rsd / num_trials << endl;
+    cout << "Average utility augmented RSD: " << total_utility_aug_rsd / num_trials << endl;
+    print_line();
+    cout << "Percentage utility gain from augmented RSD: " << (total_utility_aug_rsd - total_utility_unug_rsd) * 100.0 / total_utility_unug_rsd << "%" << endl;
+    print_line();
+}
+
+void run_experiment_3(AgentArray agents, bool verbose) {
+    print_line();
+    cout << "Experiment 3: Utility increase from transfers, varying friction" << endl;
+    print_line();
+    vector<int> order = gen_ordering(agents.numAgents);
+
+    // no friction
+    Matching rsd_matching = run_random_serial_dictatorship(agents.preferences, order);
+    int utility_pre_swap = agents.computeTotalWelfare(rsd_matching);
+
+    vector<double> percentage_utility_gains_with_friction = vector<double>();
+    // varying the level of friction
+    for (int friction_factor = 1; friction_factor < pow(2, 30); friction_factor *= 2) {
+        AgentArray agent_copy = agents.copy();
+        Matching post_transfer_matching = run_transfers(agent_copy, rsd_matching, order, friction_factor, verbose);
+        percentage_utility_gains_with_friction.push_back((agent_copy.computeTotalWelfare(post_transfer_matching) - utility_pre_swap) * 100.0 / utility_pre_swap);
+        if (friction_factor == 1 || friction_factor == 32 || friction_factor == 128 || friction_factor == 512 || friction_factor == 2048) {
+            cout << "Percentage utility gain from transfers with friction factor " << friction_factor << ": " << (agent_copy.computeTotalWelfare(post_transfer_matching) - utility_pre_swap) * 100.0 / utility_pre_swap << "%" << endl;
+        }
+    }
+    ofstream outfile;
+    outfile.open("output/experiment_3.csv");
+    for (int i = 0; i < percentage_utility_gains_with_friction.size(); i++) {
+        outfile << pow(2, i) << "," << percentage_utility_gains_with_friction[i] << endl;
+    }
+    cout << "Percentage utility gains with friction written to file" << endl;
 }
 
 
@@ -63,7 +141,7 @@ Matching run_random_serial_dictatorship(const vector<vector<int>> &preferences, 
     return m;
 }
 
-Matching run_transfers(AgentArray &agents, Matching &m, const vector<int> &order, int friction_fac, bool verbose) {
+Matching run_transfers(AgentArray &agents, Matching &m, const vector<int> &order, int friction_factor, bool verbose) {
     Matching post_transfer_matching = m.copy();
     set<int> already_traded = set<int>(); // agents that already initiated a trade no longer trade
     for (int i = 0; i < agents.numAgents; i++) {
@@ -89,7 +167,7 @@ Matching run_transfers(AgentArray &agents, Matching &m, const vector<int> &order
             if (agents.agents[orig].budget < offer_price) continue; // out of budget
             // quasi-linear utility (TODO: extend to other utility fns)
             int orig_utility_from_trade = agents.agents[orig].valuations[pref_room] - agents.agents[orig].valuations[orig_room] - offer_price;
-            orig_utility_from_trade -= friction_fac * offer_price; // friction
+            orig_utility_from_trade -= friction_factor * offer_price; // friction
             if (orig_utility_from_trade < 0) continue; // not worth it
             if (orig_utility_from_trade > highest_swap_utility) {
                 highest_swap_utility = orig_utility_from_trade;
@@ -102,7 +180,7 @@ Matching run_transfers(AgentArray &agents, Matching &m, const vector<int> &order
             // swap rooms!
             post_transfer_matching.assignments[orig_room] = other_owner;
             post_transfer_matching.assignments[new_room] = orig;
-            agents.agents[orig].budget -= transaction_price + (friction_fac * transaction_price); // friction
+            agents.agents[orig].budget -= transaction_price + (friction_factor * transaction_price); // friction
             agents.agents[other_owner].budget += transaction_price;
             already_traded.insert(orig);
             if (verbose) {

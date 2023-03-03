@@ -8,6 +8,7 @@
 #define _engine_h
 
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <random>
 #include <set>
@@ -16,6 +17,10 @@
 #include "rooms.h"
 
 int main();
+
+void run_experiment_1(AgentArray agents, int num_trials, bool verbose);
+void run_experiment_2(AgentArray agents, int num_trials, bool verbose);
+void run_experiment_3(AgentArray agents, bool verbose);
 
 Matching run_random_serial_dictatorship(const std::vector<std::vector<int>> &preferences, const std::vector<int> &order);
 Matching run_transfers(AgentArray &agents, Matching &m, const std::vector<int> &order, int friction, bool verbose);

@@ -60,6 +60,7 @@ void Agent::printPreferences() {
 
 AgentArray::AgentArray(int numAgents, RoomArray rooms) {
     this->numAgents = numAgents;
+    this->numRooms = rooms.numRooms;
     for (int i = 0; i < numAgents; i++) {
         this->agents.push_back(Agent(i, rooms));
     }
