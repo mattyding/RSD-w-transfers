@@ -6,7 +6,6 @@ int main() {
     int numRooms = 1000;
     int numAgents = 1000;
     bool verbose = false;
-    int num_trials = 20;
 
     RoomArray rooms(numRooms);
     AgentArray agents(numAgents, rooms);
@@ -15,9 +14,9 @@ int main() {
     cout << "Number of rooms: " << numRooms << endl;
     cout << "Number of agents: " << numAgents << endl << endl;
 
-    run_experiment_1(agents, num_trials, verbose);
-    run_experiment_2(agents, num_trials, verbose);
-    run_experiment_3(agents, verbose);
+    run_experiment_1(agents, 20, verbose);
+    run_experiment_2(agents, 30, verbose);
+    run_experiment_3(agents, 10, verbose);
 }
 
 void run_experiment_1(AgentArray agents, int num_trials, bool verbose) {
@@ -94,35 +93,41 @@ void run_experiment_2(AgentArray agents, int num_trials, bool verbose) {
     print_line();
     cout << "Percentage utility gain from augmented RSD: " << (total_utility_aug_rsd - total_utility_unug_rsd) * 100.0 / total_utility_unug_rsd << "%" << endl;
     print_line();
+    cout << endl;
 }
 
-void run_experiment_3(AgentArray agents, bool verbose) {
+void run_experiment_3(AgentArray agents, int num_trials, bool verbose) {
     print_line();
     cout << "Experiment 3: Utility increase from transfers, varying friction" << endl;
     print_line();
-    vector<int> order = gen_ordering(agents.numAgents);
+    cout << "Running " << num_trials << " trials and averaging the results..." << endl;
+    vector<double> total_percentage_utility_gains = vector<double>();
+    for (int i = 1; i < pow(2, 30); i *= 2) {
+        total_percentage_utility_gains.push_back(0);
+    }
+    for (int trial = 0; trial < num_trials; trial++) {
+        vector<int> order = gen_ordering(agents.numAgents);
+        // no friction
+        Matching rsd_matching = run_random_serial_dictatorship(agents.preferences, order);
+        int utility_pre_swap = agents.computeTotalWelfare(rsd_matching);
+        // varying the level of friction
+        for (int friction_factor = 1; friction_factor < pow(2, 30); friction_factor *= 2) {
+            AgentArray agent_copy = agents.copy();
+            Matching post_transfer_matching = run_transfers(agent_copy, rsd_matching, order, friction_factor, verbose);
+            total_percentage_utility_gains[log2(friction_factor)] += (agent_copy.computeTotalWelfare(post_transfer_matching) - utility_pre_swap) * 100.0 / utility_pre_swap;
 
-    // no friction
-    Matching rsd_matching = run_random_serial_dictatorship(agents.preferences, order);
-    int utility_pre_swap = agents.computeTotalWelfare(rsd_matching);
-
-    vector<double> percentage_utility_gains_with_friction = vector<double>();
-    // varying the level of friction
-    for (int friction_factor = 1; friction_factor < pow(2, 30); friction_factor *= 2) {
-        AgentArray agent_copy = agents.copy();
-        Matching post_transfer_matching = run_transfers(agent_copy, rsd_matching, order, friction_factor, verbose);
-        percentage_utility_gains_with_friction.push_back((agent_copy.computeTotalWelfare(post_transfer_matching) - utility_pre_swap) * 100.0 / utility_pre_swap);
-        if (friction_factor == 1 || friction_factor == 32 || friction_factor == 128 || friction_factor == 512 || friction_factor == 2048) {
-            cout << "Percentage utility gain from transfers with friction factor " << friction_factor << ": " << (agent_copy.computeTotalWelfare(post_transfer_matching) - utility_pre_swap) * 100.0 / utility_pre_swap << "%" << endl;
         }
     }
     ofstream outfile;
     outfile.open("output/experiment_3.csv");
-    for (int i = 0; i < percentage_utility_gains_with_friction.size(); i++) {
-        outfile << pow(2, i) << "," << percentage_utility_gains_with_friction[i] << endl;
+    for (int i = 0; i < total_percentage_utility_gains.size(); i++) {
+        outfile << pow(2, i) << "," << total_percentage_utility_gains[i] / num_trials << endl;
     }
-    cout << "Percentage utility gains with friction written to file" << endl;
+    cout << "Average percentage utility gains written to file" << endl;
+    print_line();
+    cout << endl;
 }
+
 
 
 Matching run_random_serial_dictatorship(const vector<vector<int>> &preferences, const vector<int> &order) {
