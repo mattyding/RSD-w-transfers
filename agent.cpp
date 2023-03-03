@@ -4,17 +4,23 @@ using namespace std;
 
 /* Agent Class Methods */
 
-Agent::Agent(int id, int numRooms) {
+Agent::Agent(int id, RoomArray rooms) {
     this->id = id;
-    this->budget = (rand() % kBudgetParam) * (rand() % 2) * 100;
-    // TODO: make other distributions
-    this->valuations = vector<int>(numRooms);
-    for (int i = 0; i < numRooms; i++) {
-        int val = (rand() % kValuationParam) * 100;
-        this->valuations[i] = val;
+
+    random_device rd;
+    mt19937 g(rd());
+
+    // IGNORE FOR NOW
+    this->budget = 10000;
+
+    this->valuations = vector<int>(rooms.numRooms);
+    for (int i = 0; i < rooms.numRooms; i++) {
+        int value = rooms.valuationDistributions[i](g);
+        this->valuations[i] = (value < 0) ? 0 : value;
     }
+
     // rank preferences by valuation (tie-breaking by lower room number)
-    this->preferences = vector<int>(numRooms);
+    this->preferences = vector<int>(rooms.numRooms);
     iota(this->preferences.begin(), this->preferences.end(), 0);
     stable_sort(this->preferences.begin(), this->preferences.end(), [this](int i, int j) {
         return this->valuations[i] > this->valuations[j];
@@ -52,19 +58,20 @@ void Agent::printPreferences() {
 
 /* AgentArray Class Methods */
 
-AgentArray::AgentArray(int numAgents, int numRooms) {
+AgentArray::AgentArray(int numAgents, RoomArray rooms) {
     this->numAgents = numAgents;
     for (int i = 0; i < numAgents; i++) {
-        this->agents.push_back(Agent(i, numRooms));
+        this->agents.push_back(Agent(i, rooms));
     }
 };
 
 int AgentArray::computeTotalWelfare(Matching &m) {
     int total_welfare = 0;
     for (int i = 0; i < agents.size(); i++) {
-        int room_num = m.getAssignment(i);
+        int room_num = m.getAssignmentForAgent(i);
         if (room_num != -1) {
             total_welfare += agents[i].getValuation(room_num);
+            // total_welfare -= agents[i].budget; // INCORPORATING BUDGET
         }
     }
     return total_welfare;
@@ -82,9 +89,9 @@ void AgentArray::printPreferences() {
     }
 }
 
-void AgentArray::printResults(Matching &m) {
+void AgentArray::printResults(Matching & m) {
     for (int i = 0; i < numAgents; i++) {
-        int assign = m.getAssignment(i);
+        int assign = m.getAssignmentForAgent(i);
         cout << "person " << i << " got assignment " << assign << " which is their " << agents[i].getPreferenceRank(assign) + 1 << " choice" << endl;
         }
 }

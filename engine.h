@@ -13,10 +13,12 @@
 #include <set>
 #include <tuple>
 #include "agent.h"
-#include "matching.h"
+#include "rooms.h"
 
 int main();
 
+Matching run_random_serial_dictatorship(AgentArray &agents, RoomArray &rooms, std::vector<int> &order, bool verbose);
+Matching run_transfers(AgentArray &agents, Matching &m, std::vector<int> &order, int friction, bool verbose);
 std::vector<int> gen_ordering(int numAgents);
 
 #endif

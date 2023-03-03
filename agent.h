@@ -14,7 +14,7 @@
 #include <iostream>
 #include <numeric>
 #include <vector>
-#include "matching.h"
+#include "rooms.h"
 
 class Agent {
     // CONSTANTS CONTROLLING RANDOM VALUES
@@ -25,6 +25,8 @@ class Agent {
         int id;
         // 50% chance 0; 50% chance in [0, 1000]
         int budget;
+
+
         // valuations[k] is the valuation of room k (in dollars)
         // valuations are multiple of 100 and in the range [0, 9900]
         std::vector<int> valuations;
@@ -32,7 +34,7 @@ class Agent {
         // ties are broken by the lower room number
         std::vector<int> preferences;
 
-        Agent(int id, int numRooms);
+        Agent(int id, RoomArray rooms);
 
         int getValuation(int room);
         int getPreferenceRank(int room);
@@ -46,11 +48,7 @@ class AgentArray {
         int numAgents;
         std::vector<Agent> agents;
 
-        AgentArray(int numAgents, int numRooms);
-
-        // void shuffle();
-        // Agent getAgent(int agent_id);
-        // int findAssignment(const std::vector<int> &assignments, int agent_id);
+        AgentArray(int numAgents, RoomArray rooms);
 
         int computeTotalWelfare(Matching &m);
 
