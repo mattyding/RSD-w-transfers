@@ -23,7 +23,7 @@ class Agent {
 
     public:
         int id;
-        int budget;
+        double budget;
 
         // valuations[k] is the valuation of room k
         std::vector<int> valuations;

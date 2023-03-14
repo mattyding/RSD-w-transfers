@@ -16,9 +16,9 @@ def plot_experiment_1():
     min_utility = min(data)
     max_utility = max(data)
     plt.hist(data, bins=range(min_utility, max_utility + 1, 50))
-    plt.xlabel("Average Utility Increase")
+    plt.xlabel("Utility Change")
     plt.ylabel("Frequency")
-    plt.title("Agent Utility Increases from Ex-Post Pairwise Transfers")
+    plt.title("Average Agent Utility Increase from Ex-Post Transfers")
     plt.savefig("output/experiment_1.png")
 
 
@@ -45,8 +45,10 @@ def plot_experiment_2():
     # add label for line of best fit
 
     plt.xlabel("Initial Budget")
-    plt.ylabel("Average Utility Increase")
-    plt.title("Average Utility Increases with Wealth Inequality")
+    plt.ylabel("Utility Change")
+    plt.title(
+        "Average Agent Utility Increase from Ex-Post Transfers, with Wealth Inequality"
+    )
     plt.savefig("output/experiment_2b.png")
 
     # plot initial budgets
@@ -67,16 +69,33 @@ def plot_experiment_3():
     ax = fig.add_subplot(111)
     ax.plot(indices, utility)
     ax.set_xscale("log")
-    plt.xlabel("Friction as a Proportion of Transaction Cost")
-    plt.ylabel("Change from Frictionless Baseline")
-    plt.title("Utility Increases from Ex-Post Pairwise Transfers with Varying Friction")
+    plt.xlabel("Friction as a Proportion of Transaction Cost (log scale)")
+    plt.ylabel("Improvement over RSD w/o Transfers (%)")
+    plt.title("Utility Change from Ex-Post Transfers with Proportional Friction Costs")
     plt.savefig("output/experiment_3.png")
+
+
+def plot_experiment_4():
+    plt.clf()
+    data = pd.read_csv("output/experiment_4.csv")
+    indices = data.iloc[:, 0].values
+    utility = data.iloc[:, 1].values
+    print(len(indices), len(utility))
+    print(indices, utility)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(indices, utility)
+    plt.xlabel("Flat Friction Amount")
+    plt.ylabel("Improvement over RSD w/o Transfers (%)")
+    plt.title("Utility Change from Ex-Post Transfers with Flat Friction Costs")
+    plt.savefig("output/experiment_4.png")
 
 
 def main():
     plot_experiment_1()
     plot_experiment_2()
     plot_experiment_3()
+    plot_experiment_4()
 
 
 if __name__ == "__main__":
