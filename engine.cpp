@@ -135,7 +135,6 @@ void run_experiment_4(AgentArray &agents, int num_trials) {
         int utility_pre_swap = agents.computeTotalWelfare(rsd_matching);
         // varying the level of friction
         for (int flat_friction = 1; flat_friction<total_percentage_utility_gains.size(); flat_friction++) {
-            cout << flat_friction << endl;
             AgentArray agent_copy = agents.copy();
             Matching post_transfer_matching = run_transfers(agent_copy, rsd_matching, order, flat_friction, 0);
             total_percentage_utility_gains[flat_friction] += (agent_copy.computeTotalWelfare(post_transfer_matching) - utility_pre_swap) * 100.0 / utility_pre_swap;
