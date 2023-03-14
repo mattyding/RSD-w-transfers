@@ -18,12 +18,12 @@
 
 int main();
 
-void run_experiment_1(AgentArray agents, int num_trials, bool verbose);
-void run_experiment_2(AgentArray agents, int num_trials, bool verbose);
-void run_experiment_3(AgentArray agents, int num_trials, bool verbose);
-void run_experiment_4(AgentArray agents, int num_trials, bool verbose);
+void run_experiment_1(AgentArray &agents, int num_trials, bool verbose);
+void run_experiment_2(AgentArray &agents, int num_trials, bool verbose);
+void run_experiment_3(AgentArray &agents, int num_trials, bool verbose);
 
 Matching run_random_serial_dictatorship(const std::vector<std::vector<int>> &preferences, const std::vector<int> &order);
+Matching run_strategic_random_serial_dictatorship(AgentArray &agents, const std::vector<int> &order);
 Matching run_transfers(AgentArray &agents, Matching &m, const std::vector<int> &order, int friction, bool verbose);
 std::vector<int> gen_ordering(int numAgents);
 

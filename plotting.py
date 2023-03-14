@@ -22,24 +22,9 @@ def plot_experiment_1():
     plt.savefig("output/experiment_1.png")
 
 
-def plot_experiment_3():
+def plot_experiment_2():
     plt.clf()
-    data = pd.read_csv("output/experiment_3.csv")
-    indices = data.iloc[:, 0].values
-    utility = data.iloc[:, 1].values
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.plot(indices, utility)
-    ax.set_xscale("log")
-    plt.xlabel("Friction as a Proportion of Transaction Cost")
-    plt.ylabel("Percentage Increase over RSD Baseline")
-    plt.title("Utility Increases from Ex-Post Pairwise Transfers with Varying Friction")
-    plt.savefig("output/experiment_3.png")
-
-
-def plot_experiment_4():
-    plt.clf()
-    data = pd.read_csv("output/experiment_4.csv")
+    data = pd.read_csv("output/experiment_2.csv")
     init_budget = data.iloc[:, 0].values
     utility = data.iloc[:, 1].values
     average_budgets = defaultdict(int)
@@ -62,7 +47,7 @@ def plot_experiment_4():
     plt.xlabel("Initial Budget")
     plt.ylabel("Average Utility Increase")
     plt.title("Average Utility Increases with Wealth Inequality")
-    plt.savefig("output/experiment_4a.png")
+    plt.savefig("output/experiment_2b.png")
 
     # plot initial budgets
     plt.clf()
@@ -70,13 +55,28 @@ def plot_experiment_4():
     plt.xlabel("Initial Budget")
     plt.ylabel("Number of Agents")
     plt.title("Initial Budgets of Agents")
-    plt.savefig("output/experiment_4b.png")
+    plt.savefig("output/experiment_2a.png")
+
+
+def plot_experiment_3():
+    plt.clf()
+    data = pd.read_csv("output/experiment_3.csv")
+    indices = data.iloc[:, 0].values
+    utility = data.iloc[:, 1].values
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(indices, utility)
+    ax.set_xscale("log")
+    plt.xlabel("Friction as a Proportion of Transaction Cost")
+    plt.ylabel("Change from Frictionless Baseline")
+    plt.title("Utility Increases from Ex-Post Pairwise Transfers with Varying Friction")
+    plt.savefig("output/experiment_3.png")
 
 
 def main():
     plot_experiment_1()
+    plot_experiment_2()
     plot_experiment_3()
-    plot_experiment_4()
 
 
 if __name__ == "__main__":

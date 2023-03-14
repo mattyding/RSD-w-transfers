@@ -38,8 +38,8 @@ int Matching::getAssignmentForAgent(int agent_id) {
 }
 
 Matching Matching::copy() {
-    Matching m = Matching(this->assignments.size());
+    Matching * m = new Matching(this->assignments.size());
     vector<int> v(this->assignments);
-    m.assignments = v;
-    return m;
+    m->assignments = v;
+    return *m;
 }
